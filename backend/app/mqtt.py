@@ -19,10 +19,13 @@ def on_message(client, userdata, msg):
         payload = json.loads(msg.payload.decode())
         location = payload.get("location")
         value = payload.get("value")
+        latitude = payload.get("latitude")
+        longitude = payload.get("longitude")
 
-        # Usa o loop principal para executar a tarefa assíncrona
         if main_loop:
-            asyncio.run_coroutine_threadsafe(save_to_db(location, value), main_loop)
+            asyncio.run_coroutine_threadsafe(
+                save_to_db(location, value, latitude, longitude), main_loop
+            )
         else:
             print("⚠️ Loop principal não definido!")
 
@@ -30,9 +33,14 @@ def on_message(client, userdata, msg):
     except Exception as e:
         print("❌ Erro ao processar mensagem:", e)
 
-async def save_to_db(location, value):
+async def save_to_db(location, value, latitude=None, longitude=None):
     async with SessionLocal() as session:
-        reading = DecibelReading(location=location, value=value)
+        reading = DecibelReading(
+            location=location,
+            value=float(value),
+            latitude=latitude,
+            longitude=longitude
+        )
         session.add(reading)
         await session.commit()
 

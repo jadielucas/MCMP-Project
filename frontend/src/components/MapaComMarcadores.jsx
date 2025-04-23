@@ -1,10 +1,8 @@
-// src/components/MapaComMarcadores.jsx
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
-// Ícone fixo simples para os marcadores
 const icon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   iconSize: [25, 41],
@@ -12,29 +10,36 @@ const icon = new L.Icon({
   popupAnchor: [1, -34]
 })
 
-// Exemplo de dados dos sensores — depois vamos puxar do backend
-const sensores = [
-  { id: 1, local: 'Rua A', latitude: -23.55052, longitude: -46.63331 },
-  { id: 2, local: 'Rua B', latitude: -23.5523, longitude: -46.6301 }
-]
-
 const MapaComMarcadores = ({ onMarkerClick }) => {
+  const [sensores, setSensores] = useState([])
+
+  useEffect(() => {
+    fetch('http://localhost:8000/api/sensores')
+      .then(res => res.json())
+      .then(data => {
+        console.log("🌍 Sensores recebidos:", data)  // <-- Adicionado aqui
+        setSensores(data)
+      })
+      .catch(err => console.error("Erro ao buscar sensores:", err))
+  }, [])
+  
+
   return (
-    <MapContainer center={[-23.55052, -46.63331]} zoom={15} style={{ height: '100vh', width: '100%' }}>
+    <MapContainer center={[-3.7849, -38.556]} zoom={15} style={{ height: '100vh', width: '100%' }}>
       <TileLayer
         attribution='&copy; OpenStreetMap contributors'
         url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
       />
-      {sensores.map((sensor) => (
+      {sensores.map((sensor, index) => (
         <Marker
-          key={sensor.id}
-          position={[sensor.latitude, sensor.longitude]}
+          key={index}
+          position={[sensor.latitude, sensor.longitude]}  // Aqui é necessário ter latitude e longitude
           icon={icon}
           eventHandlers={{
             click: () => onMarkerClick(sensor)
           }}
         >
-          <Popup>{sensor.local}</Popup>
+          <Popup>{sensor.location}</Popup>
         </Marker>
       ))}
     </MapContainer>

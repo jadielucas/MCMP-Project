@@ -1,6 +1,8 @@
 import uvicorn
+import asyncio
 from app import mqtt
 
 if __name__ == "__main__":
-    mqtt.start_mqtt()
+    loop = asyncio.get_event_loop()
+    mqtt.start_mqtt(loop)
     uvicorn.run("app.main:app", host="localhost", port=8000, reload=True)
