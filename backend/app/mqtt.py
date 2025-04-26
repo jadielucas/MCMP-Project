@@ -2,6 +2,8 @@ import paho.mqtt.client as mqtt
 import json
 from .database import SessionLocal
 from .models import DecibelReading
+from .models import Sensor
+from sqlalchemy import select
 import asyncio
 
 MQTT_BROKER = "localhost"
@@ -35,11 +37,27 @@ def on_message(client, userdata, msg):
 
 async def save_to_db(location, value, latitude=None, longitude=None):
     async with SessionLocal() as session:
+        # Verifica se o sensor já existe pelo "location"
+        result = await session.execute(
+            select(Sensor).where(Sensor.location == location)
+        )
+        sensor = result.scalar_one_or_none()
+
+        if not sensor:
+            # Se não existir, cria o sensor
+            sensor = Sensor(
+                location=location,
+                latitude=latitude,
+                longitude=longitude
+            )
+            session.add(sensor)
+            await session.commit()
+            await session.refresh(sensor)  # Pega o id gerado
+
+        # Agora cria a leitura associada ao sensor
         reading = DecibelReading(
-            location=location,
-            value=float(value),
-            latitude=latitude,
-            longitude=longitude
+            sensor_id=sensor.id,
+            value=float(value)
         )
         session.add(reading)
         await session.commit()

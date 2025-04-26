@@ -16,13 +16,9 @@ const MapaComMarcadores = ({ onMarkerClick }) => {
   useEffect(() => {
     fetch('http://localhost:8000/api/sensores')
       .then(res => res.json())
-      .then(data => {
-        console.log("🌍 Sensores recebidos:", data)  // <-- Adicionado aqui
-        setSensores(data)
-      })
+      .then(data => setSensores(data))
       .catch(err => console.error("Erro ao buscar sensores:", err))
   }, [])
-  
 
   return (
     <MapContainer center={[-3.7849, -38.556]} zoom={15} style={{ height: '100vh', width: '100%' }}>
@@ -30,16 +26,20 @@ const MapaComMarcadores = ({ onMarkerClick }) => {
         attribution='&copy; OpenStreetMap contributors'
         url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
       />
-      {sensores.map((sensor, index) => (
+      
+      {sensores.map((sensor) => (
         <Marker
-          key={index}
-          position={[sensor.latitude, sensor.longitude]}  // Aqui é necessário ter latitude e longitude
-          icon={icon}
+          key={sensor.id}
+          position={[sensor.latitude, sensor.longitude]}
           eventHandlers={{
             click: () => onMarkerClick(sensor)
           }}
+          icon={icon}
         >
-          <Popup>{sensor.location}</Popup>
+          <Popup>
+            <b>{sensor.location}</b><br />
+            {sensor.value} dB
+          </Popup>
         </Marker>
       ))}
     </MapContainer>
